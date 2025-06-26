@@ -2,14 +2,18 @@
   description = "Android development environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          config.android_sdk.accept_license = true;
+	  config.allowUnfree = true;
+        };
         
         androidComposition = pkgs.androidenv.composeAndroidPackages {
           buildToolsVersions = [ "34.0.0" "33.0.2" ];
@@ -56,7 +60,7 @@
             # android-studio
             
             # Useful command-line tools
-            adb
+            # adb
             scrcpy  # Screen mirroring
             
             # Code formatting
