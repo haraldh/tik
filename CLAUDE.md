@@ -75,6 +75,19 @@ ktlint
 - **Code Quality**: ktlint
 - **Version Control**: git
 
+## Projects in this Repository
+
+### magnifier-app/
+An Android camera magnifier application with zoom and color inversion features. See `magnifier-app/README.md` for details.
+
+Key commands for the magnifier app:
+```bash
+cd magnifier-app
+./gradlew build           # Build the app
+./gradlew installDebug    # Install on device/emulator
+./gradlew clean          # Clean build artifacts
+```
+
 ## Important Notes
 
 - This is a development environment setup, not an Android application
