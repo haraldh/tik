@@ -1,0 +1,38 @@
+# Nix
+result
+result-*
+
+# Android
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+.gradle/
+gradle-app.setting
+.gradletasknamecache
+local.properties
+proguard/
+*.log
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+*.jks
+*.keystore
+
+# IntelliJ IDEA / Android Studio
+*.iml
+.idea/
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Kotlin
+.kotlin/
