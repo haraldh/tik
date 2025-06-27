@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Enable version updates for Gradle
+  - package-ecosystem: "gradle"
+    directory: "/magnifier-app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "harald"
+    assignees:
+      - "harald"
+    commit-message:
+      prefix: "gradle"
+      prefix-development: "gradle"
+      include: "scope"
+      
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "harald"
+    assignees:
+      - "harald"
+    commit-message:
+      prefix: "actions"
+      prefix-development: "actions"
+      include: "scope"
