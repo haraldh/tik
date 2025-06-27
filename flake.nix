@@ -16,8 +16,8 @@
         };
         
         androidComposition = pkgs.androidenv.composeAndroidPackages {
-          buildToolsVersions = [ "34.0.0" "33.0.2" ];
-          platformVersions = [ "34" "33" ];
+          buildToolsVersions = [ "35.0.0" ];
+          platformVersions = [ "36" ];
           abiVersions = [ "x86_64" "arm64-v8a" ];
           includeNDK = true;
           ndkVersions = [ "25.2.9519653" ];
@@ -31,8 +31,26 @@
         };
 
         androidSdk = androidComposition.androidsdk;
+        
+        buildScript = pkgs.writeShellScriptBin "build-magnifier" ''
+          set -e
+          export ANDROID_HOME=${androidSdk}/libexec/android-sdk
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
+          export JAVA_HOME=${pkgs.jdk17}
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          
+          cd magnifier-app
+          echo "Building Android APK..."
+          ./gradlew assembleRelease --no-daemon
+          
+          echo "APK built successfully!"
+          echo "Location: $(realpath app/build/outputs/apk/release/*.apk)"
+        '';
       in
       {
+        packages.default = buildScript;
+        packages.build-magnifier = buildScript;
+        
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Android SDK
