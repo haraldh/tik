@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
                 view.paddingLeft,
                 view.paddingTop,
                 view.paddingRight,
-                systemBars.bottom + 16 // Add extra padding above navigation bar
+                view.paddingBottom + systemBars.bottom + 16 // Preserve existing bottom padding and add extra padding above navigation bar
             )
             insets
         }
