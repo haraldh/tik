@@ -26,7 +26,7 @@ jobs:
       run: cd magnifier-app && ./gradlew wrapper --gradle-version=latest
       
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: 'Update Gradle Wrapper to latest version'
