@@ -7,10 +7,8 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
-    reviewers:
-      - "harald"
     assignees:
-      - "harald"
+      - "haraldh"
     commit-message:
       prefix: "gradle"
       prefix-development: "gradle"
@@ -23,10 +21,8 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
-    reviewers:
-      - "harald"
     assignees:
-      - "harald"
+      - "haraldh"
     commit-message:
       prefix: "actions"
       prefix-development: "actions"
