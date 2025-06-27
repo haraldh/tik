@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun invertColors(bitmap: Bitmap): Bitmap {
-        val inverted = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config)
+        val inverted = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
         val canvas = Canvas(inverted)
         val paint = Paint()
         
