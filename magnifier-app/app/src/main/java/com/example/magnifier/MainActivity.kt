@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyChangeLight(){
-        Log.d("Magnifier", "applyInvertFilter called with isLight=$isLight")
+        Log.d("Magnifier", "applyChangeLight called with isLight=$isLight")
         camera.cameraControl.enableTorch(isLight)
     }
 
