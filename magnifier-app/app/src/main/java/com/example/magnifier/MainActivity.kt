@@ -1,6 +1,7 @@
 package com.example.magnifier
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Bundle
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var camera: androidx.camera.core.Camera
     private var imageAnalysis: ImageAnalysis? = null
     private var isInverted = false
+    private var isLight = false
     private var currentZoomRatio = 1.0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,11 +88,24 @@ class MainActivity : AppCompatActivity() {
             isInverted = isChecked
             applyInvertFilter()
         }
+
+        // Invert filter toggle
+        binding.lightToggle.setOnCheckedChangeListener { _, isChecked ->
+            Log.d("Magnifier", "Light toggle changed to: $isChecked")
+            isLight = isChecked
+            applyChangeLight()
+        }
     }
 
     private fun ActivityMainBinding.updateZoomText(zoom: Float) {
         zoomText.text = String.format("%.1fx", zoom)
     }
+
+    private fun applyChangeLight(){
+        Log.d("Magnifier", "applyInvertFilter called with isLight=$isLight")
+        camera.cameraControl.enableTorch(isLight)
+    }
+
 
     private fun applyInvertFilter() {
         Log.d("Magnifier", "applyInvertFilter called with isInverted=$isInverted")
@@ -112,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             if (isInverted) {
                 binding.viewFinder.visibility = android.view.View.INVISIBLE
                 binding.processedImageView.visibility = android.view.View.VISIBLE
-                
+
                 imageAnalysis = ImageAnalysis.Builder()
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -139,13 +154,14 @@ class MainActivity : AppCompatActivity() {
                 // Bind use cases to camera
                 val useCases = mutableListOf(preview as UseCase)
                 imageAnalysis?.let { useCases.add(it) }
-                
+
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, *useCases.toTypedArray()
                 )
 
                 // Set initial zoom
                 camera.cameraControl.setZoomRatio(currentZoomRatio)
+                camera.cameraControl.enableTorch(isLight)
 
             } catch (exc: Exception) {
                 Toast.makeText(this, "Camera initialization failed", Toast.LENGTH_SHORT).show()
@@ -154,14 +170,14 @@ class MainActivity : AppCompatActivity() {
 
         }, ContextCompat.getMainExecutor(this))
     }
-    
+
     private fun processImage(imageProxy: ImageProxy) {
         val planes = imageProxy.planes
         val buffer = planes[0].buffer
         val pixelStride = planes[0].pixelStride
         val rowStride = planes[0].rowStride
         val rowPadding = rowStride - pixelStride * imageProxy.width
-        
+
         val bitmap = Bitmap.createBitmap(
             imageProxy.width + rowPadding / pixelStride,
             imageProxy.height,
@@ -169,38 +185,38 @@ class MainActivity : AppCompatActivity() {
         )
         buffer.rewind()
         bitmap.copyPixelsFromBuffer(buffer)
-        
+
         // Rotate the bitmap to correct orientation
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
         val rotatedBitmap = rotateBitmap(bitmap, rotationDegrees)
-        
+
         // Apply color inversion
         val invertedBitmap = invertColors(rotatedBitmap)
-        
+
         // Update UI on main thread
         runOnUiThread {
             binding.processedImageView.setImageBitmap(invertedBitmap)
         }
-        
+
         imageProxy.close()
     }
-    
+
     private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
         if (degrees == 0) return bitmap
-        
+
         val matrix = Matrix()
         matrix.postRotate(degrees.toFloat())
-        
+
         return Bitmap.createBitmap(
             bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
         )
     }
-    
+
     private fun invertColors(bitmap: Bitmap): Bitmap {
         val inverted = Bitmap.createBitmap(bitmap.width, bitmap.height, bitmap.config ?: Bitmap.Config.ARGB_8888)
         val canvas = Canvas(inverted)
         val paint = Paint()
-        
+
         val colorMatrix = ColorMatrix(
             floatArrayOf(
                 -1f, 0f, 0f, 0f, 255f,
@@ -211,7 +227,7 @@ class MainActivity : AppCompatActivity() {
         )
         paint.colorFilter = ColorMatrixColorFilter(colorMatrix)
         canvas.drawBitmap(bitmap, 0f, 0f, paint)
-        
+
         return inverted
     }
 
