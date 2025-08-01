@@ -1,4 +1,4 @@
-# Magnifier App
+./g# Magnifier App
 
 A simple Android camera magnifier app with inverted color filter support. This app helps users magnify objects using their device's camera with zoom controls and an optional color inversion feature for enhanced visibility.
 
