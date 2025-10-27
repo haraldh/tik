@@ -44,13 +44,13 @@ jobs:
       run: cd magnifier-app && ./gradlew assembleDebug
       
     - name: Upload Release APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: magnifier-release-apk
         path: magnifier-app/app/build/outputs/apk/release/*.apk
         
     - name: Upload Debug APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: magnifier-debug-apk
         path: magnifier-app/app/build/outputs/apk/debug/*.apk
