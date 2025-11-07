@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
@@ -18,7 +21,6 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.magnifier.databinding.ActivityMainBinding
-import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -30,6 +32,9 @@ class MainActivity : AppCompatActivity() {
     private var isInverted = false
     private var isLight = false
     private var currentZoomRatio = 1.0f
+
+    // Pinch-to-Zoom Unterstützung
+    private lateinit var scaleGestureDetector: ScaleGestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                 view.paddingLeft,
                 view.paddingTop,
                 view.paddingRight,
-                view.paddingBottom + systemBars.bottom + 16 // Preserve existing bottom padding and add extra padding above navigation bar
+                view.paddingBottom + systemBars.bottom + 16
             )
             insets
         }
@@ -60,22 +65,59 @@ class MainActivity : AppCompatActivity() {
         // Set up UI controls
         setupControls()
 
+        // Initialisiere ScaleGestureDetector für Pinch-to-Zoom
+        scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                // Berechne neuen Zoom-Wert, begrenzt auf 1.0x–10.0x
+                val newZoom = (currentZoomRatio * detector.scaleFactor).coerceIn(1.0f, 10.0f)
+                currentZoomRatio = newZoom
+
+                if (::camera.isInitialized) {
+                    camera.cameraControl.setZoomRatio(currentZoomRatio)
+                }
+
+                // Aktualisiere UI auf Haupt-Thread
+                runOnUiThread {
+                    val progress = ((currentZoomRatio - 1.0f) * 10).toInt().coerceIn(0, 90)
+                    binding.zoomSlider.setProgress(progress, true)
+                    binding.updateZoomText(currentZoomRatio)
+                }
+
+                return true
+            }
+        })
+
+        // Füge Touch-Listener für beide Kameravorschau-Views hinzu
+        setupPinchToZoom()
+
         cameraExecutor = Executors.newSingleThreadExecutor()
+    }
+
+    private fun setupPinchToZoom() {
+        val onTouchListener = View.OnTouchListener { _, event ->
+            scaleGestureDetector.onTouchEvent(event)
+            true // Touch-Event verbrauchen, um Scrollen zu vermeiden
+        }
+
+        binding.viewFinder.setOnTouchListener(onTouchListener)
+        binding.processedImageView.setOnTouchListener(onTouchListener)
     }
 
     private fun setupControls() {
         // Zoom slider (1x to 10x magnification)
-        binding.zoomSlider.max = 90 // 0 to 90, representing 1.0x to 10.0x
+        binding.zoomSlider.max = 90 // 0 to 90 → 1.0x to 10.0x
         binding.zoomSlider.progress = 0
         binding.updateZoomText(1.0f)
 
         binding.zoomSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentZoomRatio = 1.0f + (progress / 10.0f)
-                if (::camera.isInitialized) {
-                    camera.cameraControl.setZoomRatio(currentZoomRatio)
+                if (fromUser) {
+                    currentZoomRatio = 1.0f + (progress / 10.0f)
+                    if (::camera.isInitialized) {
+                        camera.cameraControl.setZoomRatio(currentZoomRatio)
+                    }
+                    binding.updateZoomText(currentZoomRatio)
                 }
-                binding.updateZoomText(currentZoomRatio)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -89,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             applyInvertFilter()
         }
 
-        // Invert filter toggle
+        // Light toggle
         binding.lightToggle.setOnCheckedChangeListener { _, isChecked ->
             Log.d("Magnifier", "Light toggle changed to: $isChecked")
             isLight = isChecked
@@ -101,15 +143,15 @@ class MainActivity : AppCompatActivity() {
         zoomText.text = String.format("%.1fx", zoom)
     }
 
-    private fun applyChangeLight(){
+    private fun applyChangeLight() {
         Log.d("Magnifier", "applyChangeLight called with isLight=$isLight")
-        camera.cameraControl.enableTorch(isLight)
+        if (::camera.isInitialized) {
+            camera.cameraControl.enableTorch(isLight)
+        }
     }
-
 
     private fun applyInvertFilter() {
         Log.d("Magnifier", "applyInvertFilter called with isInverted=$isInverted")
-        // Restart camera with or without image processing
         startCamera()
     }
 
@@ -120,13 +162,11 @@ class MainActivity : AppCompatActivity() {
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
             // Preview
-            val preview = Preview.Builder()
-                .build()
+            val preview = Preview.Builder().build()
 
-            // Image analysis for color inversion
             if (isInverted) {
-                binding.viewFinder.visibility = android.view.View.INVISIBLE
-                binding.processedImageView.visibility = android.view.View.VISIBLE
+                binding.viewFinder.visibility = View.INVISIBLE
+                binding.processedImageView.visibility = View.VISIBLE
 
                 imageAnalysis = ImageAnalysis.Builder()
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -138,20 +178,17 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
             } else {
-                binding.viewFinder.visibility = android.view.View.VISIBLE
-                binding.processedImageView.visibility = android.view.View.GONE
+                binding.viewFinder.visibility = View.VISIBLE
+                binding.processedImageView.visibility = View.GONE
                 preview.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                 imageAnalysis = null
             }
 
-            // Select back camera as default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
-                // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
 
-                // Bind use cases to camera
                 val useCases = mutableListOf(preview as UseCase)
                 imageAnalysis?.let { useCases.add(it) }
 
@@ -159,7 +196,7 @@ class MainActivity : AppCompatActivity() {
                     this, cameraSelector, *useCases.toTypedArray()
                 )
 
-                // Set initial zoom
+                // Setze aktuellen Zoom und Lichtstatus nach Neustart
                 camera.cameraControl.setZoomRatio(currentZoomRatio)
                 camera.cameraControl.enableTorch(isLight)
 
