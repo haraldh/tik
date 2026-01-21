@@ -54,7 +54,7 @@ ktlint
 
 ### Development Environment Configuration
 - **flake.nix**: Core Nix flake configuration that defines:
-  - Android SDK components (build tools 33.0.2 and 34.0.0, platforms 33 and 34)
+  - Android SDK components (build tools 36.0.0, platform 36)
   - Development tools (JDK 17, Gradle, Maven, Kotlin, CMake, Ninja)
   - Android tools (adb, emulator, scrcpy)
   - Environment variables and PATH setup
@@ -62,8 +62,8 @@ ktlint
 - **.envrc**: Enables automatic environment loading with direnv
 
 ### Android SDK Components
-- Platform versions: Android 33 and 34
-- Build tools: 33.0.2 and 34.0.0
+- Platform versions: Android 36
+- Build tools: 36.0.0
 - ABIs: x86_64 and arm64-v8a
 - NDK: version 25.2.9519653
 - Extras: Google Play services, Google repository
