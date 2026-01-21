@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -13,20 +18,22 @@ permissions:
 jobs:
   build-release:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
-      
+      with:
+        ref: ${{ inputs.tag_name || github.ref }}
+
     - name: Set up JDK 17
       uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
-        
+
     - name: Grant execute permission for gradlew
       run: chmod +x magnifier-app/gradlew
-      
+
     - name: Cache Gradle packages
       uses: actions/cache@v5
       with:
@@ -36,32 +43,30 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-          
+
     - name: Build Release APK
       run: cd magnifier-app && ./gradlew assembleRelease
-      
+
     - name: Build Debug APK
       run: cd magnifier-app && ./gradlew assembleDebug
-      
+
     - name: Upload Release APK
       uses: actions/upload-artifact@v6
       with:
-        name: magnifier-release-apk
+        name: magnifier-app-release-apk
         path: magnifier-app/app/build/outputs/apk/release/*.apk
-        
+
     - name: Upload Debug APK
       uses: actions/upload-artifact@v6
       with:
-        name: magnifier-debug-apk
+        name: magnifier-app-debug-apk
         path: magnifier-app/app/build/outputs/apk/debug/*.apk
-        
-    - name: Create Release
+
+    - name: Upload APKs to Release
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/') || inputs.tag_name
       with:
+        tag_name: ${{ inputs.tag_name || github.ref_name }}
         files: |
           magnifier-app/app/build/outputs/apk/release/*.apk
           magnifier-app/app/build/outputs/apk/debug/*.apk
-        generate_release_notes: true
-        draft: false
-        prerelease: false
