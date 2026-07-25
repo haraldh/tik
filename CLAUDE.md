@@ -54,7 +54,7 @@ ktlint
 
 ### Development Environment Configuration
 - **flake.nix**: Core Nix flake configuration that defines:
-  - Android SDK components (build tools 36.0.0, platform 36)
+  - Android SDK components (build tools 36.0.0, platforms 36 and 37)
   - Development tools (JDK 17, Gradle, Maven, Kotlin, CMake, Ninja)
   - Android tools (adb, emulator, scrcpy)
   - Environment variables and PATH setup
@@ -62,7 +62,7 @@ ktlint
 - **.envrc**: Enables automatic environment loading with direnv
 
 ### Android SDK Components
-- Platform versions: Android 36
+- Platform versions: Android 36 and 37 (magnifier-app builds against `compileSdk = 37`)
 - Build tools: 36.0.0
 - ABIs: x86_64 and arm64-v8a
 - NDK: version 25.2.9519653
@@ -94,4 +94,4 @@ cd magnifier-app
 - Android Studio is available but commented out in flake.nix (uncomment `android-studio` if needed)
 - First-time setup requires accepting Android SDK licenses
 - The environment supports both x86_64 and ARM64 architectures
-- All tools are pinned to specific versions via flake.lock for reproducibility
+- The nixpkgs input tracks `nixos-unstable` (required for Android SDK platform 37); tool versions are still pinned via flake.lock for reproducibility
