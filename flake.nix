@@ -2,7 +2,7 @@
   description = "Android development environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -17,7 +17,7 @@
 
         androidComposition = pkgs.androidenv.composeAndroidPackages {
           buildToolsVersions = [ "36.0.0" ];
-          platformVersions = [ "36" ];
+          platformVersions = [ "36" "37" ];
           abiVersions = [ "x86_64" "arm64-v8a" ];
           includeNDK = true;
           ndkVersions = [ "25.2.9519653" ];
